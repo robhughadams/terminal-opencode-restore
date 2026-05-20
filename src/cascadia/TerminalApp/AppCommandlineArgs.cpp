@@ -616,11 +616,14 @@ void AppCommandlineArgs::_addNewTerminalArgs(AppCommandlineArgs::NewTerminalSubc
                                                                      _profileName,
                                                                      RS_A(L"CmdProfileArgDesc"));
     subcommand.sessionIdOption = subcommand.subcommand->add_option("--sessionId",
-                                                                   _sessionId,
-                                                                   RS_A(L"CmdSessionIdArgDesc"));
+                                                                    _sessionId,
+                                                                    RS_A(L"CmdSessionIdArgDesc"));
+    subcommand.restoredTabIdOption = subcommand.subcommand->add_option("--restoredTabId",
+                                                                       _restoredTabId,
+                                                                       "Restored tab identifier used for internal session restore plumbing.");
     subcommand.startingDirectoryOption = subcommand.subcommand->add_option("-d,--startingDirectory",
-                                                                           _startingDirectory,
-                                                                           RS_A(L"CmdStartingDirArgDesc"));
+                                                                            _startingDirectory,
+                                                                            RS_A(L"CmdStartingDirArgDesc"));
     subcommand.titleOption = subcommand.subcommand->add_option("--title",
                                                                _startingTitle,
                                                                RS_A(L"CmdTitleArgDesc"));
@@ -702,6 +705,11 @@ NewTerminalArgs AppCommandlineArgs::_getNewTerminalArgs(AppCommandlineArgs::NewT
         const auto str = winrt::to_hstring(_sessionId);
         const auto id = ::Microsoft::Console::Utils::GuidFromString(str.c_str());
         args.SessionId(id);
+    }
+
+    if (*subcommand.restoredTabIdOption)
+    {
+        args.RestoredTabId(winrt::to_hstring(_restoredTabId));
     }
 
     if (*subcommand.startingDirectoryOption)
@@ -792,6 +800,7 @@ void AppCommandlineArgs::_resetStateToDefault()
 {
     _profileName.clear();
     _sessionId.clear();
+    _restoredTabId.clear();
     _startingDirectory.clear();
     _startingTitle.clear();
     _startingTabColor.clear();

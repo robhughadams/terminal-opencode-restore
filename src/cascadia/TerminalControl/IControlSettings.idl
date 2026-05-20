@@ -39,6 +39,7 @@ namespace Microsoft.Terminal.Control
     {
         Boolean EnableUnfocusedAcrylic { get; };
         Guid SessionId { get; };
+        String RestoredTabId { get; };
         ScrollbarState ScrollState { get; };
 
         String FontFace { get; };

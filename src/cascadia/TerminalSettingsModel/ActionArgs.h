@@ -384,10 +384,12 @@ namespace winrt::Microsoft::Terminal::Settings::Model::implementation
         PARTIAL_ACTION_ARG_BODY(NewTerminalArgs, NEW_TERMINAL_ARGS);
         ACTION_ARG(winrt::hstring, Type, L"");
         ACTION_ARG(winrt::guid, SessionId, winrt::guid{});
+        ACTION_ARG(winrt::hstring, RestoredTabId, L"");
         ACTION_ARG(bool, AppendCommandLine, false);
         ACTION_ARG(uint64_t, ContentId);
 
         static constexpr std::string_view SessionIdKey{ "sessionId" };
+        static constexpr std::string_view RestoredTabIdKey{ "restoredTabId" };
         static constexpr std::string_view AppendCommandLineKey{ "appendCommandLine" };
         static constexpr std::string_view ContentKey{ "__content" };
 
@@ -409,6 +411,7 @@ namespace winrt::Microsoft::Terminal::Settings::Model::implementation
                        otherAsUs->_TabColor == _TabColor &&
                        otherAsUs->_ProfileIndex == _ProfileIndex &&
                        otherAsUs->_Profile == _Profile &&
+                       otherAsUs->_RestoredTabId == _RestoredTabId &&
                        otherAsUs->_AppendCommandLine == _AppendCommandLine &&
                        otherAsUs->_SuppressApplicationTitle == _SuppressApplicationTitle &&
                        otherAsUs->_ColorScheme == _ColorScheme &&
@@ -428,6 +431,7 @@ namespace winrt::Microsoft::Terminal::Settings::Model::implementation
             JsonUtils::GetValueForKey(json, ProfileIndexKey, args->_ProfileIndex);
             JsonUtils::GetValueForKey(json, ProfileKey, args->_Profile);
             JsonUtils::GetValueForKey(json, SessionIdKey, args->_SessionId);
+            JsonUtils::GetValueForKey(json, RestoredTabIdKey, args->_RestoredTabId);
             JsonUtils::GetValueForKey(json, TabColorKey, args->_TabColor);
             JsonUtils::GetValueForKey(json, SuppressApplicationTitleKey, args->_SuppressApplicationTitle);
             JsonUtils::GetValueForKey(json, ColorSchemeKey, args->_ColorScheme);
@@ -450,6 +454,7 @@ namespace winrt::Microsoft::Terminal::Settings::Model::implementation
             JsonUtils::SetValueForKey(json, ProfileIndexKey, args->_ProfileIndex);
             JsonUtils::SetValueForKey(json, ProfileKey, args->_Profile);
             JsonUtils::SetValueForKey(json, SessionIdKey, args->_SessionId);
+            JsonUtils::SetValueForKey(json, RestoredTabIdKey, args->_RestoredTabId);
             JsonUtils::SetValueForKey(json, TabColorKey, args->_TabColor);
             JsonUtils::SetValueForKey(json, SuppressApplicationTitleKey, args->_SuppressApplicationTitle);
             JsonUtils::SetValueForKey(json, ColorSchemeKey, args->_ColorScheme);
@@ -468,6 +473,7 @@ namespace winrt::Microsoft::Terminal::Settings::Model::implementation
             copy->_ProfileIndex = _ProfileIndex;
             copy->_Profile = _Profile;
             copy->_SessionId = _SessionId;
+            copy->_RestoredTabId = _RestoredTabId;
             copy->_SuppressApplicationTitle = _SuppressApplicationTitle;
             copy->_ColorScheme = _ColorScheme;
             copy->_Elevate = _Elevate;
@@ -489,6 +495,7 @@ namespace winrt::Microsoft::Terminal::Settings::Model::implementation
             h.write(TabColor());
             h.write(ProfileIndex());
             h.write(Profile());
+            h.write(RestoredTabId());
             h.write(SuppressApplicationTitle());
             h.write(ColorScheme());
             h.write(Elevate());

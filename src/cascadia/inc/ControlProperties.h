@@ -62,6 +62,7 @@
 //  All of these settings are defined in IControlSettings.
 #define CONTROL_SETTINGS(X)                                                                                                                              \
     X(winrt::guid, SessionId)                                                                                                                            \
+    X(winrt::hstring, RestoredTabId)                                                                                                                     \
     X(bool, EnableUnfocusedAcrylic, false)                                                                                                               \
     X(winrt::hstring, Padding, DEFAULT_PADDING)                                                                                                          \
     X(winrt::hstring, FontFace, L"Consolas")                                                                                                             \

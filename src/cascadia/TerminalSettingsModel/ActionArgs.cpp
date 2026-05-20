@@ -166,6 +166,11 @@ namespace winrt::Microsoft::Terminal::Settings::Model::implementation
             fmt::format_to(std::back_inserter(str), FMT_COMPILE(L"--sessionId \"{}\" "), idStr);
         }
 
+        if (!RestoredTabId().empty())
+        {
+            fmt::format_to(std::back_inserter(str), FMT_COMPILE(L"--restoredTabId {} "), QuoteAndEscapeCommandlineArg(RestoredTabId()));
+        }
+
         // The caller is always expected to provide the evaluated profile in the
         // NewTerminalArgs, not the index
         //

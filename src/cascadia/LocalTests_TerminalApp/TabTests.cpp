@@ -96,6 +96,7 @@ namespace TerminalAppLocalTests
         TEST_METHOD(TestPreviewSchemeWhilePreviewing);
 
         TEST_METHOD(TestClampSwitchToTab);
+        TEST_METHOD(TestPersistedRestoredTabIdStamping);
 
         TEST_CLASS_SETUP(ClassSetup)
         {
@@ -1526,5 +1527,75 @@ namespace TerminalAppLocalTests
             VERIFY_ARE_EQUAL(2u, focusedTabIndexOpt.value());
         });
     }
+
+    void TabTests::TestPersistedRestoredTabIdStamping()
+    {
+        auto page = _commonSetup();
+
+        TestOnUIThread([&page]() {
+            auto tab = page->_GetTabImpl(page->_tabs.GetAt(0));
+
+            const auto nonPersistActions = tab->BuildStartupActions(BuildStartupKind::Content);
+            VERIFY_ARE_EQUAL(1u, nonPersistActions.size());
+            const auto nonPersistNewTab = nonPersistActions.at(0).Args().try_as<NewTabArgs>();
+            VERIFY_IS_NOT_NULL(nonPersistNewTab);
+            const auto nonPersistTerminalArgs = nonPersistNewTab.ContentArgs().try_as<NewTerminalArgs>();
+            VERIFY_IS_NOT_NULL(nonPersistTerminalArgs);
+            VERIFY_IS_TRUE(nonPersistTerminalArgs.RestoredTabId().empty());
+
+            const auto persistActions = tab->BuildStartupActions(BuildStartupKind::Persist);
+            VERIFY_ARE_EQUAL(1u, persistActions.size());
+            const auto persistNewTab = persistActions.at(0).Args().try_as<NewTabArgs>();
+            VERIFY_IS_NOT_NULL(persistNewTab);
+            const auto persistTerminalArgs = persistNewTab.ContentArgs().try_as<NewTerminalArgs>();
+            VERIFY_IS_NOT_NULL(persistTerminalArgs);
+            VERIFY_IS_FALSE(persistTerminalArgs.RestoredTabId().empty());
+
+            const auto firstPersistedId = persistTerminalArgs.RestoredTabId();
+            const auto secondPersistActions = tab->BuildStartupActions(BuildStartupKind::Persist);
+            VERIFY_ARE_EQUAL(1u, secondPersistActions.size());
+            const auto secondPersistNewTab = secondPersistActions.at(0).Args().try_as<NewTabArgs>();
+            VERIFY_IS_NOT_NULL(secondPersistNewTab);
+            const auto secondPersistTerminalArgs = secondPersistNewTab.ContentArgs().try_as<NewTerminalArgs>();
+            VERIFY_IS_NOT_NULL(secondPersistTerminalArgs);
+            VERIFY_ARE_EQUAL(firstPersistedId, secondPersistTerminalArgs.RestoredTabId());
+
+            SplitPaneArgs args{ SplitType::Duplicate };
+            ActionEventArgs eventArgs{ args };
+            page->_HandleSplitPane(nullptr, eventArgs);
+
+            const auto splitPersistActions = tab->BuildStartupActions(BuildStartupKind::Persist);
+            VERIFY_IS_TRUE(splitPersistActions.size() > 1);
+            const auto splitNewTab = splitPersistActions.at(0).Args().try_as<NewTabArgs>();
+            VERIFY_IS_NOT_NULL(splitNewTab);
+            const auto splitTerminalArgs = splitNewTab.ContentArgs().try_as<NewTerminalArgs>();
+            VERIFY_IS_NOT_NULL(splitTerminalArgs);
+            VERIFY_IS_TRUE(splitTerminalArgs.RestoredTabId().empty());
+
+            NewTerminalArgs restoredArgs{ 1 };
+            restoredArgs.RestoredTabId(L"existing-restored-id");
+            page->_OpenNewTab(restoredArgs);
+
+            auto restoredTab = page->_GetTabImpl(page->_tabs.GetAt(1));
+            const auto restoredPersistActions = restoredTab->BuildStartupActions(BuildStartupKind::Persist);
+            VERIFY_ARE_EQUAL(1u, restoredPersistActions.size());
+            const auto restoredPersistNewTab = restoredPersistActions.at(0).Args().try_as<NewTabArgs>();
+            VERIFY_IS_NOT_NULL(restoredPersistNewTab);
+            const auto restoredPersistTerminalArgs = restoredPersistNewTab.ContentArgs().try_as<NewTerminalArgs>();
+            VERIFY_IS_NOT_NULL(restoredPersistTerminalArgs);
+            VERIFY_ARE_EQUAL(L"existing-restored-id", restoredPersistTerminalArgs.RestoredTabId());
+
+            const auto restoredPersistActionsAgain = restoredTab->BuildStartupActions(BuildStartupKind::Persist);
+            VERIFY_ARE_EQUAL(1u, restoredPersistActionsAgain.size());
+            const auto restoredPersistNewTabAgain = restoredPersistActionsAgain.at(0).Args().try_as<NewTabArgs>();
+            VERIFY_IS_NOT_NULL(restoredPersistNewTabAgain);
+            const auto restoredPersistTerminalArgsAgain = restoredPersistNewTabAgain.ContentArgs().try_as<NewTerminalArgs>();
+            VERIFY_IS_NOT_NULL(restoredPersistTerminalArgsAgain);
+            VERIFY_ARE_EQUAL(L"existing-restored-id", restoredPersistTerminalArgsAgain.RestoredTabId());
+        });
+
+        Sleep(250);
+    }
+
 
 }

@@ -127,6 +127,11 @@ namespace winrt::Microsoft::Terminal::Settings
                 defaultSettings->_SessionId = id;
             }
 
+            if (!newTerminalArgs.RestoredTabId().empty())
+            {
+                defaultSettings->_RestoredTabId = newTerminalArgs.RestoredTabId();
+            }
+
             // Override commandline, starting directory if they exist in newTerminalArgs
             if (!newTerminalArgs.Commandline().empty())
             {

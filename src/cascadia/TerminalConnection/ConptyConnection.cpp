@@ -63,6 +63,11 @@ namespace winrt::Microsoft::Terminal::TerminalConnection::implementation
             // The profile Guid does include the enclosing '{}'
             environment.as_map().insert_or_assign(L"WT_PROFILE_ID", Utils::GuidToString(_profileGuid));
 
+            if (!_restoredTabId.empty())
+            {
+                environment.as_map().insert_or_assign(L"WT_RESTORED_TAB_ID", _restoredTabId.c_str());
+            }
+
             // WSLENV is a colon-delimited list of environment variables (+flags) that should appear inside WSL
             // https://devblogs.microsoft.com/commandline/share-environment-vars-between-wsl-and-windows/
 
@@ -88,11 +93,17 @@ namespace winrt::Microsoft::Terminal::TerminalConnection::implementation
             static constexpr std::wstring_view builtinWslEnvVars[] = {
                 L"WT_SESSION",
                 L"WT_PROFILE_ID",
+                L"WT_RESTORED_TAB_ID",
             };
             // Misdiagnosis in MSVC 14.44.35207. No pointer arithmetic in sight.
 #pragma warning(suppress : 26481) // Don't use pointer arithmetic. Use span instead (bounds.1).
             for (const auto& key : builtinWslEnvVars)
             {
+                if (key == L"WT_RESTORED_TAB_ID" && _restoredTabId.empty())
+                {
+                    continue;
+                }
+
                 if (wslEnvVars.emplace(key).second)
                 {
                     additionalWslEnv.append(key);
@@ -204,15 +215,16 @@ namespace winrt::Microsoft::Terminal::TerminalConnection::implementation
     // Function Description:
     // - Helper function for constructing a ValueSet that we can use to get our settings from.
     Windows::Foundation::Collections::ValueSet ConptyConnection::CreateSettings(const winrt::hstring& cmdline,
-                                                                                const winrt::hstring& startingDirectory,
-                                                                                const winrt::hstring& startingTitle,
-                                                                                bool reloadEnvironmentVariables,
-                                                                                const winrt::hstring& initialEnvironment,
-                                                                                const Windows::Foundation::Collections::IMapView<hstring, hstring>& environmentOverrides,
-                                                                                uint32_t rows,
-                                                                                uint32_t columns,
-                                                                                const winrt::guid& guid,
-                                                                                const winrt::guid& profileGuid)
+                                                                                 const winrt::hstring& startingDirectory,
+                                                                                 const winrt::hstring& startingTitle,
+                                                                                 bool reloadEnvironmentVariables,
+                                                                                 const winrt::hstring& initialEnvironment,
+                                                                                 const Windows::Foundation::Collections::IMapView<hstring, hstring>& environmentOverrides,
+                                                                                 uint32_t rows,
+                                                                                 uint32_t columns,
+                                                                                 const winrt::guid& guid,
+                                                                                 const winrt::guid& profileGuid,
+                                                                                 const winrt::hstring& restoredTabId)
     {
         Windows::Foundation::Collections::ValueSet vs{};
 
@@ -224,6 +236,11 @@ namespace winrt::Microsoft::Terminal::TerminalConnection::implementation
         vs.Insert(L"initialCols", Windows::Foundation::PropertyValue::CreateUInt32(columns));
         vs.Insert(L"guid", Windows::Foundation::PropertyValue::CreateGuid(guid));
         vs.Insert(L"profileGuid", Windows::Foundation::PropertyValue::CreateGuid(profileGuid));
+
+        if (!restoredTabId.empty())
+        {
+            vs.Insert(L"restoredTabId", Windows::Foundation::PropertyValue::CreateString(restoredTabId));
+        }
 
         if (environmentOverrides)
         {
@@ -258,6 +275,7 @@ namespace winrt::Microsoft::Terminal::TerminalConnection::implementation
             _sessionId = unbox_prop_or<winrt::guid>(settings, L"sessionId", _sessionId);
             _environment = settings.TryLookup(L"environment").try_as<Windows::Foundation::Collections::ValueSet>();
             _profileGuid = unbox_prop_or<winrt::guid>(settings, L"profileGuid", _profileGuid);
+            _restoredTabId = unbox_prop_or<winrt::hstring>(settings, L"restoredTabId", _restoredTabId);
 
             _flags = 0;
 

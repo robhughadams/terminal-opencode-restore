@@ -538,6 +538,19 @@ namespace winrt::TerminalApp::implementation
             ActionAndArgs newTabAction{};
             INewContentArgs newContentArgs{ state.firstPane->GetTerminalArgsForPane(kind) };
 
+            if (kind == BuildStartupKind::Persist &&
+                state.args.empty() &&
+                newContentArgs)
+            {
+                if (const auto terminalArgs = newContentArgs.try_as<NewTerminalArgs>())
+                {
+                    if (terminalArgs.RestoredTabId().empty())
+                    {
+                        terminalArgs.RestoredTabId(winrt::hstring{ ::Microsoft::Console::Utils::GuidToPlainString(::Microsoft::Console::Utils::CreateGuid()) });
+                    }
+                }
+            }
+
             // Special case here: if there was one pane (which results in no actions
             // being generated), and it was a settings pane, then promote that to an
             // open settings action. The openSettings action itself has additional machinery

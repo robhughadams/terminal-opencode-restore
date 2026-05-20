@@ -58,6 +58,7 @@ namespace TerminalAppLocalTests
         TEST_METHOD(ParseSwapPaneArgs);
         TEST_METHOD(ParseArgumentsWithParsingTerminators);
         TEST_METHOD(ParseFocusPaneArgs);
+        TEST_METHOD(ParseRestoredTabIdArgs);
 
         TEST_METHOD(ParseNoCommandIsNewTab);
 
@@ -900,6 +901,23 @@ namespace TerminalAppLocalTests
             VERIFY_ARE_EQUAL(L"1", terminalArgs.Profile());
             VERIFY_IS_TRUE(terminalArgs.ColorScheme().empty());
         }
+    }
+
+    void CommandlineTest::ParseRestoredTabIdArgs()
+    {
+        AppCommandlineArgs appArgs{};
+        std::vector<const wchar_t*> rawCommands{ L"wt.exe", L"new-tab", L"--restoredTabId", L"restore-id-123" };
+        _buildCommandlinesHelper(appArgs, 1u, rawCommands);
+
+        VERIFY_ARE_EQUAL(1u, appArgs._startupActions.size());
+
+        const auto actionAndArgs = appArgs._startupActions.at(0);
+        VERIFY_ARE_EQUAL(ShortcutAction::NewTab, actionAndArgs.Action());
+        const auto newTabArgs = actionAndArgs.Args().try_as<NewTabArgs>();
+        VERIFY_IS_NOT_NULL(newTabArgs);
+        const auto terminalArgs = newTabArgs.ContentArgs().try_as<NewTerminalArgs>();
+        VERIFY_IS_NOT_NULL(terminalArgs);
+        VERIFY_ARE_EQUAL(L"restore-id-123", terminalArgs.RestoredTabId());
     }
 
     void CommandlineTest::ParseComboCommandlineIntoArgs()

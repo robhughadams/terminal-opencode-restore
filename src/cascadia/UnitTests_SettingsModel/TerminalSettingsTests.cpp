@@ -54,6 +54,7 @@ namespace SettingsModelUnitTests
         TEST_METHOD(TestLayerProfileOnColorScheme);
         TEST_METHOD(TestCommandlineToTitlePromotion);
         TEST_METHOD(TestInitialPositionParsing);
+        TEST_METHOD(TestRestoredTabIdPlumbing);
     };
 
     // CascadiaSettings::_normalizeCommandLine abuses some aspects from CommandLineToArgvW
@@ -937,5 +938,38 @@ namespace SettingsModelUnitTests
             VERIFY_IS_TRUE(pos.X == nullptr);
             VERIFY_IS_TRUE(pos.Y == nullptr);
         }
+    }
+
+    void TerminalSettingsTests::TestRestoredTabIdPlumbing()
+    {
+        NewTerminalArgs args{};
+        args.Profile(L"profile0");
+        args.RestoredTabId(L"restored-tab-id");
+
+        const auto copy = args.Copy();
+        VERIFY_ARE_EQUAL(L"restored-tab-id", copy.RestoredTabId());
+        VERIFY_ARE_EQUAL(args.Hash(), copy.Hash());
+
+        const auto json = implementation::NewTerminalArgs::ToJson(args);
+        const auto fromJson = implementation::NewTerminalArgs::FromJson(json);
+        VERIFY_ARE_EQUAL(L"restored-tab-id", fromJson.RestoredTabId());
+        VERIFY_ARE_EQUAL(args.Hash(), fromJson.Hash());
+
+        static constexpr std::string_view settingsJson{ R"(
+        {
+            "defaultProfile": "{6239a42c-0000-49a3-80bd-e8fdd045185c}",
+            "profiles": { "list": [
+                {
+                    "name": "profile0",
+                    "guid": "{6239a42c-0000-49a3-80bd-e8fdd045185c}",
+                    "historySize": 1,
+                    "commandline": "cmd.exe"
+                }
+            ] }
+        })" };
+
+        const auto settings = winrt::make_self<implementation::CascadiaSettings>(settingsJson);
+        const auto settingsStruct{ TerminalSettings::CreateWithNewTerminalArgs(*settings, args) };
+        VERIFY_ARE_EQUAL(L"restored-tab-id", settingsStruct.DefaultSettings()->RestoredTabId());
     }
 }

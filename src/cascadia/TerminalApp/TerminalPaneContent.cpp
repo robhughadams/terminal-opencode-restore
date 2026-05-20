@@ -140,6 +140,11 @@ namespace winrt::TerminalApp::implementation
             {
                 args.SessionId(id);
             }
+
+            if (!controlSettings.RestoredTabId().empty())
+            {
+                args.RestoredTabId(controlSettings.RestoredTabId());
+            }
             break;
         }
         default:

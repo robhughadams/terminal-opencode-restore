@@ -1556,7 +1556,8 @@ namespace winrt::TerminalApp::implementation
                                                                             settings.InitialRows(),
                                                                             settings.InitialCols(),
                                                                             winrt::guid(),
-                                                                            profile.Guid());
+                                                                            profile.Guid(),
+                                                                            settings.RestoredTabId());
         }
 
         else
@@ -1590,7 +1591,8 @@ namespace winrt::TerminalApp::implementation
                                                                             settings.InitialRows(),
                                                                             settings.InitialCols(),
                                                                             winrt::guid(),
-                                                                            profile.Guid());
+                                                                            profile.Guid(),
+                                                                            settings.RestoredTabId());
 
             if (inheritCursor)
             {
